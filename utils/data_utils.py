@@ -20,7 +20,7 @@ def save_ply(points, filename, colors=None, normals=None):
         desc = desc + vertex_normal.dtype.descr
 
     if colors is not None:
-        vertex_color = np.array([tuple(c * 255) for c in colors],
+        vertex_color = np.array([tuple(c) for c in colors],
                                 dtype=[('red', 'u1'), ('green', 'u1'), ('blue', 'u1')])
         assert len(vertex_color) == n
         desc = desc + vertex_color.dtype.descr

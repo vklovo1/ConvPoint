@@ -2,6 +2,7 @@
 
 # add the parent folder to the python path to access convpoint library
 import sys
+
 sys.path.append('../../')
 
 import numpy as np
@@ -10,7 +11,6 @@ from datetime import datetime
 import os
 import random
 from tqdm import tqdm
-
 
 import torch
 import torch.utils.data
@@ -24,6 +24,7 @@ import convpoint.knn.lib.python.nearest_neighbors as nearest_neighbors
 
 from PIL import Image
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -34,22 +35,27 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+
 # wrap blue / green
 def wblue(str):
-    return bcolors.OKBLUE+str+bcolors.ENDC
+    return bcolors.OKBLUE + str + bcolors.ENDC
+
+
 def wgreen(str):
-    return bcolors.OKGREEN+str+bcolors.ENDC
+    return bcolors.OKGREEN + str + bcolors.ENDC
+
 
 def nearest_correspondance(pts_src, pts_dest, data_src, K=1):
     print(pts_dest.shape)
     indices = nearest_neighbors.knn(pts_src.copy(), pts_dest.copy(), K, omp=True)
     print(indices.shape)
-    if K==1:
+    if K == 1:
         indices = indices.ravel()
         data_dest = data_src[indices]
     else:
         data_dest = data_src[indices].mean(1)
     return data_dest
+
 
 def rotate_point_cloud_z(batch_data):
     """ Randomly rotate the point clouds to augument the dataset
@@ -64,18 +70,19 @@ def rotate_point_cloud_z(batch_data):
     sinval = np.sin(rotation_angle)
     rotation_matrix = np.array([[cosval, sinval, 0],
                                 [-sinval, cosval, 0],
-                                [0, 0, 1],])
+                                [0, 0, 1], ])
     return np.dot(batch_data, rotation_matrix)
+
 
 # Part dataset only for training / validation
 class PartDataset():
 
-    def __init__ (self, filelist, folder,
-                    training=False, 
-                    iteration_number = None,
-                    block_size=8,
-                    npoints = 8192,
-                    nocolor=False):
+    def __init__(self, filelist, folder,
+                 training=False,
+                 iteration_number=None,
+                 block_size=8,
+                 npoints=8192,
+                 nocolor=False):
 
         self.folder = folder
         self.training = training
@@ -87,40 +94,38 @@ class PartDataset():
         self.iterations = iteration_number
         self.verbose = False
 
-
         self.transform = transforms.ColorJitter(
             brightness=0.4,
             contrast=0.4,
             saturation=0.4)
 
     def __getitem__(self, index):
-        
+
         # load the data
-        index = random.randint(0, len(self.filelist)-1)
+        index = random.randint(0, len(self.filelist) - 1)
         pts = np.load(os.path.join(self.folder, self.filelist[index]))
 
         # get the features
-        fts = pts[:,3:6]
+        fts = pts[:, 3:6]
 
         # get the labels
-        lbs = pts[:, 6].astype(int)-1 # the generation script label starts at 1
+        lbs = pts[:, 6].astype(int) - 1  # the generation script label starts at 1
 
         # get the point coordinates
         pts = pts[:, :3]
 
-
         # pick a random point
-        pt_id = random.randint(0, pts.shape[0]-1)
+        pt_id = random.randint(0, pts.shape[0] - 1)
         pt = pts[pt_id]
 
         # create the mask
-        mask_x = np.logical_and(pts[:,0]<pt[0]+self.bs/2, pts[:,0]>pt[0]-self.bs/2)
-        mask_y = np.logical_and(pts[:,1]<pt[1]+self.bs/2, pts[:,1]>pt[1]-self.bs/2)
+        mask_x = np.logical_and(pts[:, 0] < pt[0] + self.bs / 2, pts[:, 0] > pt[0] - self.bs / 2)
+        mask_y = np.logical_and(pts[:, 1] < pt[1] + self.bs / 2, pts[:, 1] > pt[1] - self.bs / 2)
         mask = np.logical_and(mask_x, mask_y)
         pts = pts[mask]
         lbs = lbs[mask]
         fts = fts[mask]
-        
+
         # random selection
         choice = np.random.choice(pts.shape[0], self.npoints, replace=True)
         pts = pts[choice]
@@ -134,9 +139,9 @@ class PartDataset():
 
             # random jittering
             fts = fts.astype(np.uint8)
-            fts = np.array(self.transform( Image.fromarray(np.expand_dims(fts, 0)) ))
+            fts = np.array(self.transform(Image.fromarray(np.expand_dims(fts, 0))))
             fts = np.squeeze(fts, 0)
-        
+
         fts = fts.astype(np.float32)
         fts = fts / 255 - 0.5
 
@@ -157,15 +162,15 @@ class PartDatasetTest():
 
     def compute_mask(self, pt, bs):
         # build the mask
-        mask_x = np.logical_and(self.xyzrgb[:,0]<pt[0]+bs/2, self.xyzrgb[:,0]>pt[0]-bs/2)
-        mask_y = np.logical_and(self.xyzrgb[:,1]<pt[1]+bs/2, self.xyzrgb[:,1]>pt[1]-bs/2)
+        mask_x = np.logical_and(self.xyzrgb[:, 0] < pt[0] + bs / 2, self.xyzrgb[:, 0] > pt[0] - bs / 2)
+        mask_y = np.logical_and(self.xyzrgb[:, 1] < pt[1] + bs / 2, self.xyzrgb[:, 1] > pt[1] - bs / 2)
         mask = np.logical_and(mask_x, mask_y)
         return mask
 
-    def __init__ (self, filename, folder,
-                    block_size=8,
-                    npoints = 8192,
-                    test_step=0.8, nocolor=False):
+    def __init__(self, filename, folder,
+                 block_size=8,
+                 npoints=8192,
+                 test_step=0.8, nocolor=False):
 
         self.folder = folder
         self.bs = block_size
@@ -177,12 +182,12 @@ class PartDatasetTest():
         # load the points
         self.xyzrgb = np.load(os.path.join(self.folder, self.filename))
         step = test_step
-        discretized = ((self.xyzrgb[:,:2]).astype(float)/step).astype(int)
+        discretized = ((self.xyzrgb[:, :2]).astype(float) / step).astype(int)
         self.pts = np.unique(discretized, axis=0)
-        self.pts = self.pts.astype(np.float)*step
+        self.pts = self.pts.astype(np.float) * step
 
     def __getitem__(self, index):
-        
+
         # get the data
         mask = self.compute_mask(self.pts[index], self.bs)
         pts = self.xyzrgb[mask]
@@ -198,7 +203,7 @@ class PartDatasetTest():
         if self.nocolor:
             fts = np.ones((pts.shape[0], 1))
         else:
-            fts = pts[:,3:6]
+            fts = pts[:, 3:6]
             fts = fts.astype(np.float32)
             fts = fts / 255 - 0.5
 
@@ -212,6 +217,7 @@ class PartDatasetTest():
 
     def __len__(self):
         return len(self.pts)
+
 
 def get_model(model_name, input_channels, output_channels, args):
     if model_name == "SegBig":
@@ -239,10 +245,9 @@ def main():
 
     time_string = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     root_folder = os.path.join(args.savedir, "{}_{}_nocolor{}_drop{}_{}".format(
-            args.model, args.npoints, args.nocolor, args.drop, time_string))
+        args.model, args.npoints, args.nocolor, args.drop, time_string))
 
-
-    filelist_train=[
+    filelist_train = [
         "bildstein_station1_xyz_intensity_rgb_voxels.npy",
         "bildstein_station3_xyz_intensity_rgb_voxels.npy",
         "bildstein_station5_xyz_intensity_rgb_voxels.npy",
@@ -276,7 +281,7 @@ def main():
         "stgallencathedral_station1_intensity_rgb_voxels.npy",
         "stgallencathedral_station3_intensity_rgb_voxels.npy",
         "stgallencathedral_station6_intensity_rgb_voxels.npy",
-        ]
+    ]
 
     N_CLASSES = 8
 
@@ -288,33 +293,29 @@ def main():
         net = get_model(args.model, input_channels=3, output_channels=N_CLASSES, args=args)
     if args.test:
         net.load_state_dict(torch.load(os.path.join(args.savedir, "state_dict.pth")))
-    net.cuda()
     print("Done")
-
 
     ##### TRAIN
     if not args.test:
 
-
         print("Create the datasets...", end="", flush=True)
 
         ds = PartDataset(filelist_train, args.rootdir,
-                                training=True, block_size=args.block_size,
-                                iteration_number=args.batch_size*args.iter,
-                                npoints=args.npoints,
-                                nocolor=args.nocolor)
+                         training=True, block_size=args.block_size,
+                         iteration_number=args.batch_size * args.iter,
+                         npoints=args.npoints,
+                         nocolor=args.nocolor)
         train_loader = torch.utils.data.DataLoader(ds, batch_size=args.batch_size, shuffle=True,
-                                            num_workers=args.threads)
+                                                   num_workers=args.threads)
         print("Done")
-
 
         print("Create optimizer...", end="", flush=True)
         optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
         print("Done")
-        
+
         # create the root folder
         os.makedirs(root_folder, exist_ok=True)
-        
+
         # create the log file
         logs = open(os.path.join(root_folder, "log.txt"), "w")
 
@@ -329,14 +330,13 @@ def main():
             cm = np.zeros((N_CLASSES, N_CLASSES))
             t = tqdm(train_loader, ncols=100, desc="Epoch {}".format(epoch))
             for pts, features, seg in t:
-
                 features = features.cuda()
                 pts = pts.cuda()
                 seg = seg.cuda()
-                
+
                 optimizer.zero_grad()
                 outputs = net(features, pts)
-                loss =  F.cross_entropy(outputs.view(-1, N_CLASSES), seg.view(-1))
+                loss = F.cross_entropy(outputs.view(-1, N_CLASSES), seg.view(-1))
                 loss.backward()
                 optimizer.step()
 
@@ -352,7 +352,7 @@ def main():
 
                 train_loss += loss.detach().cpu().item()
 
-                t.set_postfix(OA=wblue(oa), AA=wblue(aa), IOU=wblue(iou), LOSS=wblue(f"{train_loss/cm.sum():.4e}"))
+                t.set_postfix(OA=wblue(oa), AA=wblue(aa), IOU=wblue(iou), LOSS=wblue(f"{train_loss / cm.sum():.4e}"))
 
             # save the model
             torch.save(net.state_dict(), os.path.join(root_folder, "state_dict.pth"))
@@ -369,29 +369,28 @@ def main():
         for filename in filelist_test:
             print(filename)
             ds = PartDatasetTest(filename, args.rootdir,
-                            block_size=args.block_size,
-                            npoints= args.npoints,
-                            test_step=args.test_step,
-                            nocolor=args.nocolor
-                            )
+                                 block_size=args.block_size,
+                                 npoints=args.npoints,
+                                 test_step=args.test_step,
+                                 nocolor=args.nocolor
+                                 )
             loader = torch.utils.data.DataLoader(ds, batch_size=args.batch_size, shuffle=False,
-                                            num_workers=args.threads
-                                            )
+                                                 num_workers=args.threads
+                                                 )
 
-            xyzrgb = ds.xyzrgb[:,:3]
+            xyzrgb = ds.xyzrgb[:, :3]
             scores = np.zeros((xyzrgb.shape[0], N_CLASSES))
             with torch.no_grad():
                 t = tqdm(loader, ncols=80)
                 for pts, features, indices in t:
-                    
                     features = features.cuda()
                     pts = pts.cuda()
                     outputs = net(features, pts)
 
                     outputs_np = outputs.cpu().numpy().reshape((-1, N_CLASSES))
                     scores[indices.cpu().numpy().ravel()] += outputs_np
-            
-            mask = np.logical_not(scores.sum(1)==0)
+
+            mask = np.logical_not(scores.sum(1) == 0)
             scores = scores[mask]
             pts_src = xyzrgb[mask]
 
@@ -399,8 +398,8 @@ def main():
             scores = nearest_correspondance(pts_src.astype(np.float32), xyzrgb.astype(np.float32), scores, K=1)
 
             # compute softmax
-            scores = scores - scores.max(axis=1)[:,None]
-            scores = np.exp(scores) / np.exp(scores).sum(1)[:,None]
+            scores = scores - scores.max(axis=1)[:, None]
+            scores = np.exp(scores) / np.exp(scores).sum(1)[:, None]
             scores = np.nan_to_num(scores)
 
             os.makedirs(os.path.join(args.savedir, "results"), exist_ok=True)
@@ -408,14 +407,15 @@ def main():
             # saving labels
             save_fname = os.path.join(args.savedir, "results", filename)
             scores = scores.argmax(1)
-            np.savetxt(save_fname,scores,fmt='%d')
+            np.savetxt(save_fname, scores, fmt='%d')
 
             if args.savepts:
                 save_fname = os.path.join(args.savedir, "results", f"{filename}_pts.txt")
-                xyzrgb = np.concatenate([xyzrgb, np.expand_dims(scores,1)], axis=1)
-                np.savetxt(save_fname,xyzrgb,fmt=['%.4f','%.4f','%.4f','%d'])
+                xyzrgb = np.concatenate([xyzrgb, np.expand_dims(scores, 1)], axis=1)
+                np.savetxt(save_fname, xyzrgb, fmt=['%.4f', '%.4f', '%.4f', '%d'])
 
             # break
+
 
 if __name__ == '__main__':
     main()

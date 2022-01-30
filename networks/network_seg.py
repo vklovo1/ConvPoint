@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 ################################
 ## Shapenet
 ################################
@@ -18,15 +19,15 @@ class SegSmall(nn.Module):
         # self.cv1 = PtConv(input_channels, pl, n_centers, dimension, use_bias=False)
         self.cv2 = PtConv(input_channels, pl, n_centers, dimension, use_bias=False)
         self.cv3 = PtConv(pl, pl, n_centers, dimension, use_bias=False)
-        self.cv4 = PtConv(pl, 2*pl, n_centers, dimension, use_bias=False)
-        self.cv5 = PtConv(2*pl, 2*pl, n_centers, dimension, use_bias=False)
-        self.cv6 = PtConv(2*pl, 2*pl, n_centers, dimension, use_bias=False)
+        self.cv4 = PtConv(pl, 2 * pl, n_centers, dimension, use_bias=False)
+        self.cv5 = PtConv(2 * pl, 2 * pl, n_centers, dimension, use_bias=False)
+        self.cv6 = PtConv(2 * pl, 2 * pl, n_centers, dimension, use_bias=False)
 
-        self.cv5d = PtConv(2*pl, 2*pl, n_centers, dimension, use_bias=False)
-        self.cv4d = PtConv(4*pl, 2*pl, n_centers, dimension, use_bias=False)
-        self.cv3d = PtConv(4*pl, pl, n_centers, dimension, use_bias=False)
-        self.cv2d = PtConv(2*pl, pl, n_centers, dimension, use_bias=False)
-        self.cv1d = PtConv(2*pl, pl, n_centers, dimension, use_bias=False)
+        self.cv5d = PtConv(2 * pl, 2 * pl, n_centers, dimension, use_bias=False)
+        self.cv4d = PtConv(4 * pl, 2 * pl, n_centers, dimension, use_bias=False)
+        self.cv3d = PtConv(4 * pl, pl, n_centers, dimension, use_bias=False)
+        self.cv2d = PtConv(2 * pl, pl, n_centers, dimension, use_bias=False)
+        self.cv1d = PtConv(2 * pl, pl, n_centers, dimension, use_bias=False)
         # self.cv0d = PtConv(2*pl, pl, n_centers, dimension, use_bias=False)
 
         self.fcout = nn.Linear(pl, output_channels)
@@ -34,12 +35,12 @@ class SegSmall(nn.Module):
         # self.bn1 = nn.BatchNorm1d(pl)
         self.bn2 = nn.BatchNorm1d(pl)
         self.bn3 = nn.BatchNorm1d(pl)
-        self.bn4 = nn.BatchNorm1d(2*pl)
-        self.bn5 = nn.BatchNorm1d(2*pl)
-        self.bn6 = nn.BatchNorm1d(2*pl)
+        self.bn4 = nn.BatchNorm1d(2 * pl)
+        self.bn5 = nn.BatchNorm1d(2 * pl)
+        self.bn6 = nn.BatchNorm1d(2 * pl)
 
-        self.bn5d = nn.BatchNorm1d(2*pl)
-        self.bn4d = nn.BatchNorm1d(2*pl)
+        self.bn5d = nn.BatchNorm1d(2 * pl)
+        self.bn4d = nn.BatchNorm1d(2 * pl)
         self.bn3d = nn.BatchNorm1d(pl)
         self.bn2d = nn.BatchNorm1d(pl)
         self.bn1d = nn.BatchNorm1d(pl)
@@ -48,7 +49,6 @@ class SegSmall(nn.Module):
         self.drop = nn.Dropout(0.5)
 
     def forward(self, x, input_pts, return_features=False):
-
 
         # x1, pts1 = self.cv1(x, input_pts, 16, 2048)
         # x1 = F.relu(apply_bn(x1, self.bn1))
@@ -83,7 +83,7 @@ class SegSmall(nn.Module):
         x2d, _ = self.cv2d(x3d, pts3, 8, pts2)
         x2d = F.relu(apply_bn(x2d, self.bn2d))
         x2d = torch.cat([x2d, x2], dim=2)
-        
+
         x1d, _ = self.cv1d(x2d, pts2, 8, input_pts)
         x1d = F.relu(apply_bn(x1d, self.bn1d))
         # x1d = torch.cat([x1d, x1], dim=2)
@@ -118,16 +118,16 @@ class SegBig(nn.Module):
         self.cv1 = PtConv(pl, pl, n_centers, dimension, use_bias=False)
         self.cv2 = PtConv(pl, pl, n_centers, dimension, use_bias=False)
         self.cv3 = PtConv(pl, pl, n_centers, dimension, use_bias=False)
-        self.cv4 = PtConv(pl, 2*pl, n_centers, dimension, use_bias=False)
-        self.cv5 = PtConv(2*pl, 2*pl, n_centers, dimension, use_bias=False)
-        self.cv6 = PtConv(2*pl, 2*pl, n_centers, dimension, use_bias=False)
+        self.cv4 = PtConv(pl, 2 * pl, n_centers, dimension, use_bias=False)
+        self.cv5 = PtConv(2 * pl, 2 * pl, n_centers, dimension, use_bias=False)
+        self.cv6 = PtConv(2 * pl, 2 * pl, n_centers, dimension, use_bias=False)
 
-        self.cv5d = PtConv(2*pl, 2*pl, n_centers, dimension, use_bias=False)
-        self.cv4d = PtConv(4*pl, 2*pl, n_centers, dimension, use_bias=False)
-        self.cv3d = PtConv(4*pl, pl, n_centers, dimension, use_bias=False)
-        self.cv2d = PtConv(2*pl, pl, n_centers, dimension, use_bias=False)
-        self.cv1d = PtConv(2*pl, pl, n_centers, dimension, use_bias=False)
-        self.cv0d = PtConv(2*pl, pl, n_centers, dimension, use_bias=False)
+        self.cv5d = PtConv(2 * pl, 2 * pl, n_centers, dimension, use_bias=False)
+        self.cv4d = PtConv(4 * pl, 2 * pl, n_centers, dimension, use_bias=False)
+        self.cv3d = PtConv(4 * pl, pl, n_centers, dimension, use_bias=False)
+        self.cv2d = PtConv(2 * pl, pl, n_centers, dimension, use_bias=False)
+        self.cv1d = PtConv(2 * pl, pl, n_centers, dimension, use_bias=False)
+        self.cv0d = PtConv(2 * pl, pl, n_centers, dimension, use_bias=False)
 
         self.fcout = nn.Linear(pl + pl, output_channels)
 
@@ -135,12 +135,12 @@ class SegBig(nn.Module):
         self.bn1 = nn.BatchNorm1d(pl)
         self.bn2 = nn.BatchNorm1d(pl)
         self.bn3 = nn.BatchNorm1d(pl)
-        self.bn4 = nn.BatchNorm1d(2*pl)
-        self.bn5 = nn.BatchNorm1d(2*pl)
-        self.bn6 = nn.BatchNorm1d(2*pl)
+        self.bn4 = nn.BatchNorm1d(2 * pl)
+        self.bn5 = nn.BatchNorm1d(2 * pl)
+        self.bn6 = nn.BatchNorm1d(2 * pl)
 
-        self.bn5d = nn.BatchNorm1d(2*pl)
-        self.bn4d = nn.BatchNorm1d(2*pl)
+        self.bn5d = nn.BatchNorm1d(2 * pl)
+        self.bn4d = nn.BatchNorm1d(2 * pl)
         self.bn3d = nn.BatchNorm1d(pl)
         self.bn2d = nn.BatchNorm1d(pl)
         self.bn1d = nn.BatchNorm1d(pl)
@@ -192,7 +192,7 @@ class SegBig(nn.Module):
         x2d, _ = self.cv2d(x3d, pts3, 8, pts2)
         x2d = self.relu(apply_bn(x2d, self.bn2d))
         x2d = torch.cat([x2d, x2], dim=2)
-        
+
         x1d, _ = self.cv1d(x2d, pts2, 8, pts1)
         x1d = self.relu(apply_bn(x1d, self.bn1d))
         x1d = torch.cat([x1d, x1], dim=2)
